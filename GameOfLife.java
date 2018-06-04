@@ -207,6 +207,8 @@ public class GameOfLife{
 	{
 	
 		//attempts to find, and read GOLSeed.txt, catches if the file is not found
+		//	NOTE: There MUST be a buffer of "0"s on all sides. "1"s in the buffer, for now, will throw an
+		//		ArrayIndexOutOfBoundsException later on.						X X X X X X X X X X X X X X X X X X X X X X X X X 
 		try{
 			Scanner fileScan = new Scanner(new File("GOLSeed.txt"));
 			for (int i=0; i<arr.length; i++){
