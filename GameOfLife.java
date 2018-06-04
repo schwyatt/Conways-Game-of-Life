@@ -5,7 +5,7 @@
 *		a rough version of the game of life before I go to bed on this fine
 *			Friday night.
 *	
-* Note: maybe make the game board, the int[][][], and String[][][] - less memory needed?
+* Note: maybe make the game board, the int[][][], a String[][][] - will be easier to see changes, plus might use less memory?
 */
 
 
@@ -14,7 +14,9 @@ import java.io.*;
 import java.lang.*;
 public class GameOfLife{
 
-	/* Initialises Board, Prints Arrays, and calls the Game of Life itself.
+	
+	/************************ MAIN **************************/
+	/* Initialises Board, Prints Arrays, and calls the Game of Life function.
 	*
 	* Input: __
 	* Output: none
@@ -23,26 +25,17 @@ public class GameOfLife{
 	public static void main(String[] args)
 	{
 	
-		// initialise board with the beginning states (the 'seed')
-		int[][][] arr = new int[12][12][2];		// note, the order of the axis are: [y][x][z]
-		arr = initBoard(arr);
+		// initialise board with the beginning states (the 'seed', stored in GOLSeed.txt)
+		int[][][] arr = new int[12][12][2];			// define Dimentions in seed X X X X X X X X X X X X X X X X X X X X X X X X X X X X X 
+		arr = fileInput(arr);;
 		
-		System.out.print("Initialised:");
-		int hold = 0;
-		printTDArrayTerminal(arr, hold);
-		System.out.println();
+		int end = 0;
 		
-		boolean cont = true;
-		
-		Scanner user = new Scanner(System.in);
-		String usercont = "y";
-		
+		// used to create a delay between iterations
 		long startTime = 0;
 		long endTime = 0;
 		
-		printTDArrayTerminal(arr, hold);
-		
-		/* Prints to a File, only, the file does not automatically refresh					X X X X X X X X X X X X X 
+		/* Prints to a File, but the file does not automatically refresh. Will create the file if Game of Life Output.txt does not already exist.X X X X X X X X X X X X X X X X X X X X X X X X X X X X X 
 		try{
 			File outPut = new File("Game of Life Output.txt");
 			PrintStream outPutFile = new PrintStream(outPut);
@@ -53,50 +46,42 @@ public class GameOfLife{
 			System.exit(-1);
 		}*/	
 		
-		while(cont){
-		
-			
-			usercont = user.next();
-		
-			if(usercont.equalsIgnoreCase("n")){
-				System.out.println("ekosi");
-				cont = false;
-			}
+		// creates the iterations for the Game of Life
+		while(end < 20){	// iterations develop at specific intervals, up to 20 times.
 			
 			startTime = System.currentTimeMillis();
 			
 			arr = gameOfLife(arr);
 			
-			printTDArrayTerminal(arr, 0);
-			//printTDArrayTerminal(arr, 1);  //Prints the array which is the basis for calculating which indices will live or sleep
+			printTDArrayTerminal(arr, 0);		// Prints the 0 array, which displays alive/asleep states.
+			//printTDArrayTerminal(arr, 1); 	//Prints the array which is the basis for calculating alive/asleep states found in 0.
 			
-			zeroBoard(arr, 1);
-			/*
-			for(long i=0; i < 1000; i++){	// Is there a more elegant way to delay the execution of each iteration? X X X X X X X X X
+			zeroBoard(arr, 1);			//makes all indices 0 in arr[][][1]. Necessary to acurately calculate alive/sleep states in arr[][][0].
+			
+			// delays iterations
+			for(long i=0; i < 1000; i++){		// Is there a more elegant way to delay the execution of each iteration? X X X X X X X X X X X X X X X X X X X X X X X X X X X X X 
 				endTime = System.currentTimeMillis();
 				i = endTime - startTime;
 			}
-			*/
+			end++;
 		}
 	}
 	
 	/************************ GAME OF LIFE **************************/
 	
 	/* Updates game board per iteration by:
-	*1) adding 1 to all neighbors of an alive board.
-	*		a) in the board  (which is two boards, 0 and 1), 0 stores which indices are alive
-	*			and 1 stores neighboring values
-	*2) determining which of these indices will become alive, or will sleep.
-	*		a) if an indices has a value of 3 on the board 1, it will be alive next iteration
-	*		b) if an indices has a value of 2 on the board 1, and a value of 1 on the board 0
-	*			(which indicated it is already alive), this indice survives the next iteration
-	*		c) else, the indice is asleep for the next iteration. 
+	*	1) adding 1 to all neighbors of an alive index of arr[][][0] (from now on [0] for short), but stores this in arr[][][1] ([1]).
+	*	2) determining which of indices will become alive, and which will sleep after [1] has been completed for this iteration.
+	*		a) if an index has a value of 3 in [1], it will be set to alive in [0] for the next iteration
+	*		b) if an index has a value of 2 in [1], and a value of 1 on the board [0] (which indicats the index is already alive in [0]), this index survives for the next iteration
+	*		c) else, the index is set to asleep in [0] for the next iteration. 
 	*
-	*Input: 3D array
-	*Output: 3D array
+	*Input: 3D int array
+	*Output: 3D int array
 	*/
 	public static int[][][] gameOfLife(int[][][] arr)
 	{
+		// finds the alive indices in [0], and adds 1 to all neighbors of these indices in [1] using the addToNeighbors function.
 		for (int i=0; i<arr.length; i++){
 			for (int j=0; j<arr[0].length; j++){
 				if(arr[i][j][0] > 0){
@@ -105,15 +90,25 @@ public class GameOfLife{
 			}
 		}
 		
+		// calculates alive/asleep states in [0].
 		fillBoardZ0(arr);
 		
 		return arr;
 	}
 	
+	/* Calculates alive/asleep states in [0].
+	*
+	* Input: 3D int array
+	* Output: none
+	*
+	*/
 	public static void fillBoardZ0(int[][][] arr)
 	{
+		//cycles through each index, comparing its number of naighbors (stored in [1]) to its value in [0], and detemrining its alive/asleep
+		//	state for the next iteration
 		for (int i=0; i<arr.length; i++){
 			for (int j=0; j<arr[0].length; j++){
+				// The following are the rules for when an index is set to alive ("1"), or asleep ("0").
 				if(arr[i][j][1] == 3){
 					arr[i][j][0] = 1;
 				}else if(arr[i][j][1] == 2 && arr[i][j][0] == 1){
@@ -126,123 +121,97 @@ public class GameOfLife{
 	}
 	
 	
-	/* Adds 1 to each of the [z1] indices neighbouring arr[x][y][z0]
+	/* Adds 1 to each of the indices (in [1]) neighbouring the current index, arr[x][y][0]
 	*
-	*Input:
-	*Output:
+	*Input: 3D int array
+	*Output: none
 	*
 	*/
 	public static void addToNeighbors (int[][][] arr, int x, int y)
 	{
+		//will reset arr[x][y][1] to its original value at the start of this process
 		int save = arr[x][y][1];
 		
 		int tempX = 0;
 		int tempY = 0;
 		
+		// used in the creation of a buffer. The actual size of the game board should be 2 less on x and y than 
+		//	specified, the buffer is 1 index around on every side. This is then used to wrap the 
+		//	game board around, and make any evolutions which run off the board (such as a glider
+		//	would) return to the board, but on the other side. 
 		int lastIndexX = arr.length;
 		int lastIndexY = arr[0].length;
 		
 		for (int i= -1; i<2; i++){
 			for (int j=-1; j<2; j++){
+				// if index is alive. . .
 				if(arr[x][y][0] == 1){
+					//. . .look at the indices surrounding it, one at a time.
 					tempX = x+i;
 					tempY = y+j;
-			
+					
+					// buffer in x. If x+i = the last indices in x (the buffer), move value to other side
+					//	of the board.
 					if(tempX == lastIndexX-1){
 						tempX = 1;
 					} else if(tempX == 0){
 						tempX = lastIndexX - 2;
 					}
-				
+					
+					// buffer in y.
 					if(tempY == lastIndexY-1){
 						tempY = 1;
 					} else if(tempY == 0){
 						tempY = lastIndexY - 2;
 					}
-				
+					
+					// add "1" to the naighboring indices of arr[x][y][0], but in [1]
 					arr[tempX][tempY][1] += 1;
 				}
 			}
 		}
 		
+		// return arr[x][y], the index we are adding to its naighbors, back to its original value in [1].
+		//	Without this, arr[x][y][1] would 'have' more naighbors than in reality, and would mess up
+		//		alive/asleep states in [0].
 		arr[x][y][1] = save;
 	}
 	
 	
 	
-	/************************ BOARD INITIALISATION **************************/
+	/************************ ADAPTATIONS, ZERO BOARD **************************/
 	
-	/* Creates initial board: initialises board with 0's at each index
-	*
-	*Input: int [y][x], where y and x are the axis, and are of any lengths
-	*Output: int [y][x], with each indices set to 0
-	*
-	*
-	*Could this whole function be replaced with fileInput, if the file GOLSeed also specifies the dimensions for the board? X X X X X X X X
-	*
-	*/
-	public static int[][][] initBoard(int[][][] arr)
-	{
-		// zero's the board at z plain hold
-		int hold = 0;
-		arr = zeroBoard(arr, hold);
-		
-		// gives life to certain indices
-		arr = giveLife(arr);
-		
-		return arr;	
-	}
-	
-	public static int[][][] zeroBoard(int[][][] arr, int hold)
+	public static int[][][] zeroBoard(int[][][] arr, int zAxis)
 	{
 		for (int i=1; i<arr.length-1; i++){
 			for (int j=1; j<arr[0].length-1; j++){
-				arr[i][j][hold] = 0;
+				arr[i][j][zAxis] = 0;
 			}
 		}
 		
 		return arr;
 	}
 	
-	
-	/* Sets certain Indices to be alive, ie: set to any number other than 0.
-	*
-	*Input: int[y][x], where y and x are the axis, and are of any length
-	*Output: int[y][x], with certain indices set to 1
-	* 
-	*
-	*/
-	public static int[][][] giveLife(int[][][] seed)
-	{
-
-		seed = fileInput(seed);
-	
-		// seed[seed.length/2][seed.length/2] = 1;
-	
-		return seed;
-	}
-	
-	
-	/******************************* SCANNING FILES *******************************/
+	/******************************* INITIALISE BOARD *******************************/
 	
 	/* Scans the file GOLSeed.txt for the seed of GOL, which is then input directly into
 	*		the seed[][][] array.
 	*
-	*Input: 2D int array
-	*Output: 2D int array
+	*Input: 3D int array
+	*Output: 3D int array
 	*
 	*Catches FileNotFound and InputMismatchException, notifying user, and exiting the program.
 	*
 	*/
-	public static int[][][] fileInput(int[][][] seed)
+	public static int[][][] fileInput(int[][][] arr)
 	{
 	
 		//attempts to find, and read GOLSeed.txt, catches if the file is not found
 		try{
 			Scanner fileScan = new Scanner(new File("GOLSeed.txt"));
-			for (int i=0; i<seed.length; i++){
-				for (int j=0; j<seed[0].length; j++){
-					seed[i][j][0] = fileScan.nextInt();
+			for (int i=0; i<arr.length; i++){
+				for (int j=0; j<arr[0].length; j++){
+					arr[i][j][0] = fileScan.nextInt();
 				}
 			}
 		}
@@ -259,14 +228,14 @@ public class GameOfLife{
 			System.exit(-1);
 		}
 		
-		return seed;
+		return arr;
 	}
 	
 	/******************************* PRINT FUNCTIONS *******************************/
 	
 	/* prints x and y axis of 3D int arrays to the terminal
 	*
-	*Input: 3D int array, z plain to print
+	*Input: 3D int array, z plain to print (0 or 1)
 	*Output: none
 	*
 	*/
@@ -281,7 +250,7 @@ public class GameOfLife{
 		}
 	}
 	
-	/* prints x and y axis of 3D int arrays to an output file
+	/* prints x and y axis of 3D int arrays to an output file, Game Of Life Output.txt
 	*
 	*Input: 3D int array, z plain to print, PrintStream to print to
 	*Output: none
@@ -296,6 +265,5 @@ public class GameOfLife{
 			}
 			outPutFile.println("\n");
 		}
-	}*/
-	
+	}*/	
 }
