@@ -23,7 +23,7 @@ public class GameOfLife{
 	public static void main(String[] args)
 	{
 	
-		// initialise board with the beginning states states (the 'seed')
+		// initialise board with the beginning states (the 'seed')
 		int[][][] arr = new int[12][12][2];		// note, the order of the axis are: [y][x][z]
 		arr = initBoard(arr);
 		
